@@ -70,6 +70,7 @@ lazbuild 3mfviewer.lpi --build-mode=Release
 1. Copy these files to a single directory, e.g. `%COMMANDER_PATH%\Plugins\Lister\3mfviewer\`:
    - `3mfviewer.wlx64`
    - `lib3mf.dll`
+   - for 32-bit copy the dll from the subdirectory to the plugin dir.
 
 2. In TC: `Configuration → Options → Plugins → Lister Plugins → Add`  
    Select `3mfviewer.wlx64`.
