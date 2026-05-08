@@ -1,6 +1,6 @@
 # 3MF Viewer – Total Commander Lister Plugin (WLX64)
 
-Interactive OpenGL viewer for `.3mf` (3D Manufacturing Format) and `stl` files.
+Interactive OpenGL viewer for `.3mf` (3D Manufacturing Format) and `stl` files  and ´step´ files and ´gcode´ files.
 
 ## Features
 
