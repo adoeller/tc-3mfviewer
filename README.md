@@ -2,6 +2,8 @@
 
 Interactive OpenGL viewer for `.3mf` (3D Manufacturing Format) and `stl` files  and `step` files and `gcode` files.
 
+![Demo](3mf.png)
+
 ## Features
 
 | Control | Action |
