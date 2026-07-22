@@ -49,7 +49,6 @@ jobs:
               -o -iname "*.exe" -o -iname "*32.exe" -o -iname "*64.exe" \
               -o -iname "*.zip" \
               -o -iname "readme*" \
-              -o -iname "*.dll" \
               -o -iname "license*" -o -iname "lizenz*" \
             \) ! -path "./.git/*" \
               ! -path "./src/*" \
