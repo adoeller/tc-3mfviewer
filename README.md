@@ -1,95 +1,171 @@
 # 3MF Viewer – Total Commander Lister Plugin
 
-Interactive OpenGL viewer for `.3mf` (3D Manufacturing Format) and `stl` files  and `step` files and `gcode` files.
+Interaktiver OpenGL-Viewer für 3D-Modelle und G-Code im Total Commander Lister.  
+Basiert auf **lib3mf 2.5.0** (3MF Consortium) und Direct Win32/WGL – kein LCL-Framework.
 
 ![Demo](3mf.png)
 
-## Features
+---
 
-| Control | Action |
-|---------|--------|
-| Left drag | Rotate model |
-| Right drag | Pan |
-| Mouse wheel | Zoom |
-| Double-click | Reset view |
-| `R` / `F5` | Reset view |
-| `W` | Cycle: Solid → Solid+Wire → Wireframe |
-| Arrow keys | Rotate in 5° steps |
-| `+` / `-` | Zoom in / out |
+## Unterstützte Formate
 
-TC dark mode is detected automatically via `lcp_darkmode`.
+| Erweiterung | Format | Lade-Bibliothek |
+|---|---|---|
+| `.3mf` | 3D Manufacturing Format | lib3mf 2.5.0 |
+| `.stl` | Stereolithography (Binary + ASCII) | Eingebaut |
+| `.stp`, `.step` | STEP (eingeschränktes BREP) | Eingebaut |
+| `.gcode`, `.gco`, `.nc`, `.ngc` | 3D-Druck-G-Code | Eingebaut |
+
+SVG und DXF werden nicht unterstützt.
+
+### lib3mf – unterstützte 3MF-Inhalte
+
+lib3mf implementiert die **3MF Core Specification** sowie folgende Extensions:
+
+- **Mesh-Objekte** – Dreiecksnetze mit Vertices und Normalen
+- **Components** – Instanzen / Referenzen auf andere Objekte
+- **Build-Items** – Transformationen und Anordnung im Bauraum
+- **Materials & Properties Extension** – Farben, Texturen, Multi-Properties
+- **Beam Lattice Extension** – Gitterstrukturen
+- **Slice Extension** – 2D-Schichtdaten
+- **Production Extension** – UUIDs, Pfad-basierte Struktur
+- **Secure Content Extension** – Verschlüsselung
+
+> **Hinweis:** Der aktuelle Viewer liest alle Mesh-Objekte (MeshObjects).
+> Build-Item-Transformationen und Component-Referenzen werden noch nicht
+> angewendet – alle Geometrien erscheinen im Modell-Koordinatensystem.
+
+Der STEP-Importer unterstützt keine NURBS- oder B-Spline-Flächen.
 
 ---
 
-## Project structure
+## Steuerung
 
-```
-3mfviewer/
-├── 3mfviewer.lpi          Lazarus project (open this in the IDE)
-├── 3mfviewer.lpr          Library source / exports
-├── plugin_main.pas        WLX export functions + form lifecycle
-├── viewer_form.pas        TViewerForm – TOpenGLControl + rendering
-├── mesh_data.pas          lib3mf loading + vertex normal computation
-├── listplug.pas           WLX SDK header (v2.12)
-└── lib3mf/
-    └── Unit_Lib3MF.pas    Pascal bindings (from lib3mf-2.5.0-Windows.zip)
-```
+| Eingabe | Aktion |
+|---|---|
+| Linke Maustaste + Ziehen | Modell drehen |
+| Rechte Maustaste + Ziehen | Pan (verschieben) |
+| Mausrad | Zoom |
+| Doppelklick | Ansicht zurücksetzen |
+| `R` / `F5` | Ansicht zurücksetzen |
+| `W` | Modus: Solid → Solid+Drahtgitter → Drahtgitter |
+| Pfeiltasten | 5°-Rotation |
+| `+` / `-` | Zoom |
 
----
+TC Dark-Mode wird automatisch erkannt (`lcp_darkmode`-Flag).
 
-## Prerequisites
-
-1. **Lazarus 3.x** with **FPC 3.2.x** — 64-bit (win64) toolchain installed  
-   Download: https://www.lazarus-ide.org/
-
-2. **`OpenGLContext` package** — ships with Lazarus; install via  
-   `Package → Install/Uninstall Packages → OpenGLContext → Install`
-
-3. **`lib3mf.dll`** (from the lib3mf-2.5.0-Windows release) must be placed  
-   in the **same directory** as `3mfviewer.wlx64`.
+Im G-Code-Modus stehen zusätzlich Layer-, Support-, Travel- und
+Linienbreitenoptionen im rechten Bedienfeld zur Verfügung. `G92`-Resets für
+Position und Extruder werden berücksichtigt.
 
 ---
 
-## Build steps
+## Voraussetzungen
 
-### In the Lazarus IDE
+- **Total Commander 64-bit** für `3mfviewer.wlx64`, oder **32-bit** für `3mfviewer.wlx`
+- **Windows 10/11** (x86 oder x64, passend zu Total Commander)
+- **OpenGL 1.5+** (auf jedem Windows-System mit aktuellem Grafiktreiber vorhanden)
+- Für `3mfviewer.wlx64`: **`lib3mf.dll`** muss im selben Verzeichnis liegen
+- Für `3mfviewer.wlx`: **`lib3mf_32bit.dll\lib3mf.dll`** muss relativ zum Plugin liegen
 
-1. `File → Open Project` → select `3mfviewer.lpi`
-2. Verify the active build mode is **Release** (top toolbar)
-3. `Run → Build` (or `Shift+F9`)
-4. Output: `3mfviewer.wlx64` in the project directory
+Dateipfade werden für 3MF, STL, STEP und G-Code intern über Unicode-Windows-APIs
+geöffnet. Die Thumbnail-Schnittstelle von WLX selbst übergibt ihren Dateinamen
+lediglich als ANSI-Zeichenkette.
 
-### Command line
+---
+
+## Build
+
+### Voraussetzungen
+
+- **Lazarus 3.x** mit **FPC 3.2.x**, Toolchain `x86_64-win64`
+  Download: https://www.lazarus-ide.org/
+
+> Kein LCL-Paket erforderlich. Das Plugin verwendet nur FPC RTL + Windows-API.
+
+### Lazarus IDE
+
+1. `File → Open Project` → `3mfviewer.lpi`
+2. Build-Modus **Release 64** oder **Release 32**
+3. `Run → Build` (`Shift+F9`)
+4. Ausgabe: `3mfviewer.wlx64`
+
+### Kommandozeile
 
 ```bat
-lazbuild 3mfviewer.lpi --build-mode=Release
+lazbuild 3mfviewer.lpi --build-mode="Release 64"
+lazbuild 3mfviewer.lpi --build-mode="Release 32"
 ```
 
 ---
 
 ## Installation in Total Commander
 
-1. Copy these files to a single directory, e.g. `%COMMANDER_PATH%\Plugins\Lister\3mfviewer\`:
-   - `3mfviewer.wlx64`
-   - `lib3mf.dll`
-   - for 32-bit copy the dll from the subdirectory to the plugin dir.
+1. Architekturpassende Dateien bereitstellen:
+   - 64 Bit: `3mfviewer.wlx64` und `lib3mf.dll` im selben Verzeichnis
+   - 32 Bit: `3mfviewer.wlx` sowie `lib3mf_32bit.dll\lib3mf.dll`
 
-2. In TC: `Configuration → Options → Plugins → Lister Plugins → Add`  
-   Select `3mfviewer.wlx64`.
+2. In TC: `Konfiguration → Optionen → Plugins → Lister Plugins → Hinzufügen`
 
-3. TC will store the detect string `EXT="3MF" and EXT="STL"` in `wincmd.ini` automatically.  
-   After that, pressing `F3` on any `.3mf` file opens the plugin.
+3. TC speichert den Detect-String für 3MF, STL, STEP und G-Code automatisch.
+
+> **Beim Build:** TC muss geschlossen sein, da die geladene DLL gesperrt wird
+> (Windows Error 5 = Access Denied).
 
 ---
 
-## Notes
+## Projektstruktur
 
-- The plugin is **64-bit only** (`.wlx64` extension). It requires TC 64-bit.  
-  For TC 32-bit, recompile with target `i386-win32` and output extension `.wlx`.
+```
+3mfviewer/
+├── 3mfviewer.lpi          Lazarus-Projektdatei
+├── 3mfviewer.lpr          Library-Einstiegspunkt (Exports)
+├── plugin_main.pas        WLX-Exports + Fenster-Lifecycle
+├── viewer_form.pas        Win32-Fenster, WGL/OpenGL, Splash, Steuerung
+├── mesh_data.pas          3MF/STL/STEP-Laden, Normalen, Bounding Sphere
+├── gcodeparser.pas        G-Code-Parser mit Layer- und Feature-Erkennung
+├── listplug.pas           WLX SDK Header v2.12
+└── lib3mf/
+    └── Unit_Lib3MF.pas    Pascal-Bindings (auto-generiert, ACT 1.8.1)
+```
 
-- All mesh objects in the 3MF file are merged into one draw call.  
-  Build-item transforms are not yet applied (raw model-space geometry).
+---
 
-- Smooth vertex normals are computed by averaging adjacent face normals.
+## Lizenzen
 
-- OpenGL 1.5+ is required (universally available on any Windows 7+ system).
+### Dieses Plugin
+
+Frei verwendbar ohne Einschränkungen.
+
+### lib3mf – BSD 2-Clause License
+
+`lib3mf.dll` und `Unit_Lib3MF.pas` unterliegen der **BSD 2-Clause License**:
+
+```
+Copyright (C) 2024 3MF Consortium
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+```
+
+Quelle: https://github.com/3MFConsortium/lib3mf  
+Die Pascal-Bindings wurden generiert mit dem Automatic Component Toolkit (ACT) v1.8.1.
